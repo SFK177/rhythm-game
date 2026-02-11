@@ -12,9 +12,8 @@ body {
 }
 
 h1 {
-  margin-top: 40px;
-  font-size: 28px;
-  color: black;
+  margin-top: 30px;
+  font-size: 26px;
   letter-spacing: 3px;
 }
 
@@ -32,7 +31,7 @@ h1 {
   color: white;
   border-radius: 50%;
   font-size: 22px;
-  margin: 80px auto;
+  margin: 50px auto;
   line-height: 200px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.4);
   transition: 0.1s;
@@ -43,106 +42,134 @@ h1 {
   background: red;
 }
 
-#score, #combo {
-  font-size: 22px;
+#score, #combo, #timer {
+  font-size: 20px;
   margin-top: 10px;
 }
 
-footer {
-  margin-top: 60px;
-  font-size: 12px;
-  color: gray;
+#result {
+  font-size: 22px;
+  margin-top: 20px;
+  color: red;
+}
+
+button {
+  padding: 10px 20px;
+  margin-top: 20px;
+  font-size: 16px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>正拳中段突き<br>リズムチャレンジ</h1>
+<h1>正拳中段突き<br>30秒チャレンジ</h1>
 <div id="dojobar"></div>
+
+<div id="timer">残り時間: 30</div>
 
 <div id="btn">押忍！</div>
 
 <p id="score">スコア: 0</p>
 <p id="combo">コンボ: 0</p>
 
-<footer>
-日本空手道 不動会
-</footer>
+<div id="result"></div>
+
+<button onclick="startGame()">スタート</button>
 
 <script>
 let score = 0;
 let combo = 0;
 let maxCombo = 0;
 let lastTap = 0;
+let timeLeft = 30;
+let timerInterval;
+let gameActive = false;
 
-// 🎵 スマホ対応音システム
 let audioCtx;
 
+// 🔊 音
 function playHitSound() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-
-  oscillator.type = "square";
-  oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
-
-  gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-
-  oscillator.start();
-  oscillator.stop(audioCtx.currentTime + 0.08);
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "square";
+  osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.08);
 }
 
-function playOsuSound() {
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-
-  oscillator.type = "triangle";
-  oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
-
-  gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
-
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-
-  oscillator.start();
-  oscillator.stop(audioCtx.currentTime + 0.3);
+function playFinishSound() {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(250, audioCtx.currentTime);
+  gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.5);
 }
 
 const btn = document.getElementById("btn");
 const scoreText = document.getElementById("score");
 const comboText = document.getElementById("combo");
+const timerText = document.getElementById("timer");
+const resultText = document.getElementById("result");
+
+function startGame() {
+  score = 0;
+  combo = 0;
+  maxCombo = 0;
+  timeLeft = 30;
+  gameActive = true;
+  resultText.textContent = "";
+
+  scoreText.textContent = "スコア: 0";
+  comboText.textContent = "コンボ: 0";
+  timerText.textContent = "残り時間: 30";
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    timerText.textContent = "残り時間: " + timeLeft;
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      gameActive = false;
+      playFinishSound();
+      resultText.textContent = 
+        "終了！ 最終スコア: " + score + 
+        " ／ MAXコンボ: " + maxCombo;
+    }
+  }, 1000);
+}
 
 btn.addEventListener("click", () => {
 
-  playHitSound(); // 🔊 毎回鳴る音
+  if (!gameActive) return;
+
+  playHitSound();
 
   const now = Date.now();
-  
+
   if (now - lastTap < 500) {
     combo++;
     score += 10 * combo;
-    if (combo > maxCombo) {
-      maxCombo = combo;
-    }
+    if (combo > maxCombo) maxCombo = combo;
   } else {
     combo = 1;
-  }
-
-  // 🔥 10コンボで別音
-  if (combo === 10) {
-    playOsuSound();
   }
 
   lastTap = now;
 
   scoreText.textContent = "スコア: " + score;
-  comboText.textContent = "コンボ: " + combo + " (MAX " + maxCombo + ")";
+  comboText.textContent = 
+    "コンボ: " + combo + " (MAX " + maxCombo + ")";
 });
 </script>
 
