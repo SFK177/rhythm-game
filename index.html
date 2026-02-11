@@ -1,16 +1,16 @@
-あ<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
-  <p>スコア: <span id="score">0</span></p>
-  <p>コンボ: <span id="combo">0</span></p>
-<button onclick="startGame()">スタート</button>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>正拳中段突きチャレンジ</title>
 
 <style>
-body
-  <audio id="hitSound" src="https://www.soundjay.com/mechanical/sounds/swish-1.mp3"></audio>
-<audio id="osSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
+body {
+  margin: 0;
+  background: linear-gradient(to bottom, #ffffff, #eeeeee);
+  text-align: center;
+  font-family: "Hiragino Kaku Gothic ProN", sans-serif;
+}
 
 h1 {
   margin-top: 40px;
@@ -45,9 +45,14 @@ h1 {
 }
 
 #score {
-  font-size: 24px;
+  font-size: 22px;
   margin-top: 20px;
-  color: black;
+}
+
+#combo {
+  font-size: 18px;
+  margin-top: 10px;
+  color: red;
 }
 
 footer {
@@ -63,15 +68,19 @@ footer {
 <h1>正拳中段突き<br>リズムチャレンジ</h1>
 <div id="dojobar"></div>
 
-<div id="btn">押忍！</div>
+<div id="score">スコア: 0</div>
+<div id="combo">コンボ: 0 (MAX 0)</div>
 
-<div id="score">スコア：0</div>
+<div id="btn">押忍！</div>
 
 <footer>
 日本空手道 不動会
 </footer>
 
-<script>
+<!-- 🔊 音 -->
+<audio id="hitSound" src="https://www.soundjay.com/mechanical/sounds/swish-1.mp3"></audio>
+<audio id="osSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
+
 <script>
 let score = 0;
 let combo = 0;
@@ -81,14 +90,11 @@ let lastTap = 0;
 const btn = document.getElementById("btn");
 const scoreText = document.getElementById("score");
 const comboText = document.getElementById("combo");
-
-// 🔊 音を取得
 const hitSound = document.getElementById("hitSound");
 const osSound = document.getElementById("osSound");
 
 btn.addEventListener("click", () => {
 
-  // 突き音
   hitSound.currentTime = 0;
   hitSound.play();
 
@@ -105,7 +111,6 @@ btn.addEventListener("click", () => {
     combo = 1;
   }
 
-  // 🔥 10コンボで押忍！
   if (combo === 10) {
     osSound.play();
   }
@@ -113,11 +118,8 @@ btn.addEventListener("click", () => {
   lastTap = now;
 
   scoreText.textContent = "スコア: " + score;
-  comboText.textContent = "コンボ: " + combo + 
-                          " (MAX " + maxCombo + ")";
+  comboText.textContent = "コンボ: " + combo + " (MAX " + maxCombo + ")";
 });
-</script>
-</script>
 </script>
 
 </body>
