@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body { text-align:center; font-family:sans-serif; background:black; color:white;}
+#btn {
+  width:200px;
+  height:200px;
+  background:red;
+  border-radius:50%;
+  font-size:30px;
+  margin:100px auto;
+  line-height:200px;
+}
+</style>
+</head>
+<body>
+
+<h2>リズム突きチャレンジ</h2>
+<p>残り時間: <span id="time">30</span></p>
+<p>スコア: <span id="score">0</span></p>
+
+<div id="btn">突け！</div>
+
+<audio id="sound" src="https://www.soundjay.com/button/sounds/button-09.mp3"></audio>
+
+<script>
+let score = 0;
+let time = 30;
+let timer;
+
+document.getElementById("btn").onclick = function(){
+  score++;
+  document.getElementById("score").textContent = score;
+  document.getElementById("sound").play();
+}
+
+function countdown(){
+  time--;
+  document.getElementById("time").textContent = time;
+  if(time<=0){
+    clearInterval(timer);
+    alert("終了！スコア:"+score);
+  }
+}
+
+timer = setInterval(countdown,1000);
+</script>
+
+</body>
+</html>
