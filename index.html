@@ -73,14 +73,39 @@ footer {
 
 <script>
 let score = 0;
-const btn = document.getElementById("btn");
-const scoreDisplay = document.getElementById("score");
+let combo = 0;
+let maxCombo = 0;
+let lastTap = 0;
 
-btn.addEventListener("click", function(){
-  score++;
-  scoreDisplay.textContent = "スコア：" + score;
+const btn = document.getElementById("btn");
+const scoreText = document.getElementById("score");
+const comboText = document.getElementById("combo");
+
+btn.addEventListener("click", () => {
+  const now = Date.now();
+  
+  // 0.5秒以内なら成功とする
+  if (now - lastTap < 500) {
+    combo++;
+    score += 10 * combo;
+    
+    if (combo > maxCombo) {
+      maxCombo = combo;
+    }
+  } else {
+    combo = 1;
+  }
+
+  lastTap = now;
+
+  scoreText.textContent = "スコア: " + score;
+  comboText.textContent = "コンボ: " + combo + 
+                          " (MAX " + maxCombo + ")";
 });
+</script>
 </script>
 
 </body>
 </html>
+<h2 id="score">スコア: 0</h2>
+<h3 id="combo">コンボ: 0 (MAX 0)</h3>
