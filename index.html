@@ -76,6 +76,7 @@ footer {
 </footer>
 
 <script>
+<script>
 let score = 0;
 let combo = 0;
 let maxCombo = 0;
@@ -85,10 +86,18 @@ const btn = document.getElementById("btn");
 const scoreText = document.getElementById("score");
 const comboText = document.getElementById("combo");
 
+// 🔊 音を取得
+const hitSound = document.getElementById("hitSound");
+const osSound = document.getElementById("osSound");
+
 btn.addEventListener("click", () => {
+
+  // 突き音
+  hitSound.currentTime = 0;
+  hitSound.play();
+
   const now = Date.now();
   
-  // 0.5秒以内なら成功とする
   if (now - lastTap < 500) {
     combo++;
     score += 10 * combo;
@@ -100,20 +109,18 @@ btn.addEventListener("click", () => {
     combo = 1;
   }
 
+  // 🔥 10コンボで押忍！
+  if (combo === 10) {
+    osSound.play();
+  }
+
   lastTap = now;
 
   scoreText.textContent = "スコア: " + score;
   comboText.textContent = "コンボ: " + combo + 
                           " (MAX " + maxCombo + ")";
 });
-  const hitSound = document.getElementById("hitSound");
-const osSound = document.getElementById("osSound");
-  hitSound.currentTime = 0;
-hitSound.play();
-
-if (combo === 10) {
-  osSound.play();
-}
+</script>
 </script>
 </script>
 
