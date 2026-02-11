@@ -6,10 +6,9 @@
 
 <style>
 body {
-  margin: 0;
-  background: linear-gradient(to bottom, #ffffff, #eeeeee);
   text-align: center;
-  font-family: "Hiragino Kaku Gothic ProN", sans-serif;
+  font-family: sans-serif;
+  background: #f5f5f5;
 }
 
 h1 {
@@ -44,15 +43,9 @@ h1 {
   background: red;
 }
 
-#score {
+#score, #combo {
   font-size: 22px;
-  margin-top: 20px;
-}
-
-#combo {
-  font-size: 18px;
   margin-top: 10px;
-  color: red;
 }
 
 footer {
@@ -68,10 +61,10 @@ footer {
 <h1>正拳中段突き<br>リズムチャレンジ</h1>
 <div id="dojobar"></div>
 
-<div id="score">スコア: 0</div>
-<div id="combo">コンボ: 0 (MAX 0)</div>
-
 <div id="btn">押忍！</div>
+
+<p id="score">スコア: 0</p>
+<p id="combo">コンボ: 0</p>
 
 <footer>
 日本空手道 不動会
@@ -90,11 +83,13 @@ let lastTap = 0;
 const btn = document.getElementById("btn");
 const scoreText = document.getElementById("score");
 const comboText = document.getElementById("combo");
+
 const hitSound = document.getElementById("hitSound");
 const osSound = document.getElementById("osSound");
 
 btn.addEventListener("click", () => {
 
+  // 🔊 突き音
   hitSound.currentTime = 0;
   hitSound.play();
 
@@ -103,7 +98,6 @@ btn.addEventListener("click", () => {
   if (now - lastTap < 500) {
     combo++;
     score += 10 * combo;
-    
     if (combo > maxCombo) {
       maxCombo = combo;
     }
@@ -111,7 +105,9 @@ btn.addEventListener("click", () => {
     combo = 1;
   }
 
+  // 🔥 10コンボで押忍！
   if (combo === 10) {
+    osSound.currentTime = 0;
     osSound.play();
   }
 
