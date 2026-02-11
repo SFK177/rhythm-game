@@ -9,7 +9,8 @@
 
 <style>
 body {
-  margin: 0;
+  <audio id="hitSound" src="https://www.soundjay.com/mechanical/sounds/swish-1.mp3"></audio>
+<audio id="osSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>margin: 0;
   background: linear-gradient(to bottom, #ffffff, #eeeeee);
   text-align: center;
   font-family: "Hiragino Kaku Gothic ProN", sans-serif;
@@ -105,6 +106,14 @@ btn.addEventListener("click", () => {
   comboText.textContent = "コンボ: " + combo + 
                           " (MAX " + maxCombo + ")";
 });
+  const hitSound = document.getElementById("hitSound");
+const osSound = document.getElementById("osSound");
+  hitSound.currentTime = 0;
+hitSound.play();
+
+if (combo === 10) {
+  osSound.play();
+}
 </script>
 </script>
 
