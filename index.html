@@ -70,28 +70,57 @@ footer {
 日本空手道 不動会
 </footer>
 
-<!-- 🔊 音 -->
-<audio id="hitSound" src="https://www.soundjay.com/mechanical/sounds/swish-1.mp3"></audio>
-<audio id="osSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
-
 <script>
 let score = 0;
 let combo = 0;
 let maxCombo = 0;
 let lastTap = 0;
 
+// 🎵 スマホ対応音システム
+let audioCtx;
+
+function playHitSound() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  oscillator.type = "square";
+  oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+
+  gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + 0.08);
+}
+
+function playOsuSound() {
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  oscillator.type = "triangle";
+  oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+
+  gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + 0.3);
+}
+
 const btn = document.getElementById("btn");
 const scoreText = document.getElementById("score");
 const comboText = document.getElementById("combo");
 
-const hitSound = document.getElementById("hitSound");
-const osSound = document.getElementById("osSound");
-
 btn.addEventListener("click", () => {
 
-  // 🔊 突き音
-  hitSound.currentTime = 0;
-  hitSound.play();
+  playHitSound(); // 🔊 毎回鳴る音
 
   const now = Date.now();
   
@@ -105,10 +134,9 @@ btn.addEventListener("click", () => {
     combo = 1;
   }
 
-  // 🔥 10コンボで押忍！
+  // 🔥 10コンボで別音
   if (combo === 10) {
-    osSound.currentTime = 0;
-    osSound.play();
+    playOsuSound();
   }
 
   lastTap = now;
