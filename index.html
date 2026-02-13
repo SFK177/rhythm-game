@@ -8,28 +8,55 @@
 body{
  text-align:center;
  font-family:sans-serif;
- background:#f5f5f5;
+ background: radial-gradient(circle at center,#1a2a6c,#16222a);
+ color:white;
 }
 
+h2{
+ text-shadow:0 0 12px rgba(255,255,255,0.7);
+}
+
+/* メッセージ */
+#msg{
+ height:40px;
+ font-size:30px;
+ font-weight:bold;
+ text-shadow:0 0 10px white;
+}
+
+/* 的 */
 #target{
  width:220px;
  height:220px;
  margin:30px auto;
  border-radius:50%;
  background:gray;
+
+ box-shadow:
+ 0 10px 25px rgba(0,0,0,0.7),
+ inset 0 4px 12px rgba(255,255,255,0.4);
+
+ transition: transform 0.1s, box-shadow 0.1s;
 }
 
-#msg{
- height:40px;
- font-size:28px;
- font-weight:bold;
- color:#222;
+#target:active{
+ transform:scale(0.9);
+ box-shadow:0 3px 10px rgba(0,0,0,0.8);
 }
 
 button{
  font-size:18px;
- padding:10px 20px;
- margin:6px;
+ padding:12px 24px;
+ margin:8px;
+ border:none;
+ border-radius:12px;
+ background:#2a2a2a;
+ color:white;
+ box-shadow:0 4px 10px rgba(0,0,0,0.6);
+}
+
+button:active{
+ transform:scale(0.95);
 }
 
 .flash{
@@ -38,7 +65,7 @@ button{
 
 @keyframes flashRed{
  0%{background:#ff0000;}
- 100%{background:#f5f5f5;}
+ 100%{background:#16222a;}
 }
 </style>
 </head>
@@ -48,7 +75,6 @@ button{
 <h2>正拳中段突き 判断チャレンジ</h2>
 
 <div id="msg"></div>
-
 <div id="target"></div>
 
 <div>スコア：<span id="score">0</span></div>
@@ -116,13 +142,11 @@ target.onclick=()=>{
    combo++
    showMsg("いいよ")
  }
-
  else if(type==="green"){
    combo++
    score+=combo*2
    showMsg("さいこー")
  }
-
  else{
    score=0
    combo=0
@@ -143,7 +167,6 @@ function update(){
 }
 
 startBtn.onclick=()=>{
-
  score=0
  combo=0
  time=30
@@ -169,7 +192,6 @@ startBtn.onclick=()=>{
      clearInterval(timer)
      clearInterval(colorTimer)
      playing=false
-
      document.getElementById("bgm").pause()
 
      alert("終了！\nスコア："+score+"\nランク："+getRank(score))
