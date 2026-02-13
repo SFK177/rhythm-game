@@ -63,10 +63,6 @@ button{
 <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3">
 </audio>
 
-<audio id="rankHigh">
-<source src="https://www.soundjay.com/misc/sounds/fanfare-1.mp3">
-</audio>
-
 <script>
 let score=0
 let combo=0
@@ -74,6 +70,7 @@ let time=30
 let playing=false
 let type=""
 let timer
+let colorTimer
 
 const target=document.getElementById("target")
 const scoreEl=document.getElementById("score")
@@ -81,7 +78,6 @@ const comboEl=document.getElementById("combo")
 const timeEl=document.getElementById("time")
 const sendBtn=document.getElementById("sendBtn")
 
-// ランク
 function getRank(s){
  if(s<50) return "見習い"
  if(s<150) return "初級"
@@ -91,7 +87,6 @@ function getRank(s){
  return "師範級🔥"
 }
 
-// 色生成
 function nextTarget(){
  const r=Math.random()
  if(r<0.4){type="blue";target.style.background="blue"}
@@ -99,10 +94,10 @@ function nextTarget(){
  else{type="red";target.style.background="red"}
 }
 
-// 押した時
 target.onclick=()=>{
  if(!playing)return
 
+ document.getElementById("hit").currentTime=0
  document.getElementById("hit").play()
 
  if(type==="blue"){
@@ -126,14 +121,13 @@ target.onclick=()=>{
  nextTarget()
 }
 
-// 更新
 function update(){
  scoreEl.textContent=score
  comboEl.textContent=combo
 }
 
-// スタート
 startBtn.onclick=()=>{
+
  score=0
  combo=0
  time=30
@@ -147,17 +141,22 @@ startBtn.onclick=()=>{
  nextTarget()
  timeEl.textContent=time
 
+ // 色自動変化
+ colorTimer=setInterval(()=>{
+   if(playing) nextTarget()
+ },800)
+
  timer=setInterval(()=>{
    time--
    timeEl.textContent=time
 
    if(time<=0){
      clearInterval(timer)
+     clearInterval(colorTimer)
      playing=false
 
      document.getElementById("bgm").pause()
      document.getElementById("end").play()
-     document.getElementById("rankHigh").play()
 
      alert("終了！\nスコア："+score+"\nランク："+getRank(score))
 
@@ -166,7 +165,6 @@ startBtn.onclick=()=>{
  },1000)
 }
 
-// ランキング送信（GAS）
 sendBtn.onclick=()=>{
  const name=prompt("名前を入力")
  if(!name)return
