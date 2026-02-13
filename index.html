@@ -52,9 +52,6 @@ body{
 <audio id="hit" src="https://www.soundjay.com/mechanical/sounds/swish-1.mp3"></audio>
 <audio id="end" src="https://www.soundjay.com/button/beep-10.mp3"></audio>
 
-<!-- 🥋 押忍ボイス -->
-<audio id="osvoice" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
-
 <!-- 🎵 BGM -->
 <audio id="bgm" loop>
  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
@@ -75,28 +72,20 @@ const timeText=document.getElementById("time")
 
 const hit=document.getElementById("hit")
 const end=document.getElementById("end")
-const osvoice=document.getElementById("osvoice")
 const bgm=document.getElementById("bgm")
 
 // 色出現
 function spawn(){
  const r=Math.random()
-
  if(r<0.5){
    btn.style.background="blue"
    btn.dataset.type="blue"
    btn.textContent="突け！"
- }
- else if(r<0.8){
+ }else if(r<0.8){
    btn.style.background="green"
    btn.dataset.type="green"
    btn.textContent="速突き！"
-
-   // 🥋 緑だけ押忍！
-   osvoice.currentTime=0
-   osvoice.play()
- }
- else{
+ }else{
    btn.style.background="red"
    btn.dataset.type="red"
    btn.textContent="止まれ！"
@@ -136,6 +125,7 @@ document.getElementById("startBtn").onclick=()=>{
  time=30
  playing=true
 
+ // 🎵BGM開始（スマホ対応）
  bgm.volume=0.3
  bgm.currentTime=0
  bgm.play()
@@ -168,6 +158,7 @@ function endGame(){
 
  document.getElementById("retryBtn").style.display="inline"
 
+ // ランキング送信
  const name=prompt("名前を入力")
  if(name){
  fetch("https://script.google.com/macros/s/AKfycbw3iOC_7EBRqfXUZjnblOXdTI8gcLcpA8RqEf_lurK9YQhcO5AduBAMJBLo71qfbHET/exec",{
