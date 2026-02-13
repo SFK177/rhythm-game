@@ -6,43 +6,39 @@
 
 <style>
 body{
-  text-align:center;
-  font-family:sans-serif;
-  background:#f5f5f5;
-}
-
-h1{
-  margin-top:20px;
+ text-align:center;
+ font-family:sans-serif;
+ background:#f5f5f5;
 }
 
 #target{
-  width:220px;
-  height:220px;
-  margin:30px auto;
-  border-radius:50%;
-  background:gray;
+ width:220px;
+ height:220px;
+ margin:30px auto;
+ border-radius:50%;
+ background:gray;
 }
 
 button{
-  font-size:20px;
-  padding:12px 22px;
-  margin:8px;
+ font-size:18px;
+ padding:10px 20px;
+ margin:6px;
 }
 
 .flash{
-  animation:flashRed 0.25s;
+ animation:flashRed 0.25s;
 }
 
 @keyframes flashRed{
-  0%{background:#ff0000;}
-  100%{background:#f5f5f5;}
+ 0%{background:#ff0000;}
+ 100%{background:#f5f5f5;}
 }
 </style>
 </head>
 
 <body>
 
-<h1>正拳中段突き<br>判断チャレンジ</h1>
+<h2>正拳中段突き 判断チャレンジ</h2>
 
 <div id="target"></div>
 
@@ -51,7 +47,8 @@ button{
 <div>残り：<span id="time">30</span>秒</div>
 
 <button id="startBtn">スタート</button>
-<button id="retryBtn">再挑戦</button>
+<button id="sendBtn" disabled>ランキング送信</button>
+<button onclick="location.reload()">再挑戦</button>
 
 <!-- 音 -->
 <audio id="bgm" loop>
@@ -66,14 +63,6 @@ button{
 <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3">
 </audio>
 
-<audio id="rankLow">
-<source src="https://www.soundjay.com/button/sounds/button-10.mp3">
-</audio>
-
-<audio id="rankMid">
-<source src="https://www.soundjay.com/button/sounds/button-4.mp3">
-</audio>
-
 <audio id="rankHigh">
 <source src="https://www.soundjay.com/misc/sounds/fanfare-1.mp3">
 </audio>
@@ -83,93 +72,75 @@ let score=0
 let combo=0
 let time=30
 let playing=false
-let type="blue"
+let type=""
 let timer
 
 const target=document.getElementById("target")
 const scoreEl=document.getElementById("score")
 const comboEl=document.getElementById("combo")
 const timeEl=document.getElementById("time")
+const sendBtn=document.getElementById("sendBtn")
 
 // ランク
 function getRank(s){
- if(s<50) return {name:"見習い", sound:"rankLow"}
- if(s<150) return {name:"初級", sound:"rankLow"}
- if(s<300) return {name:"中級", sound:"rankMid"}
- if(s<500) return {name:"上級", sound:"rankMid"}
- if(s<800) return {name:"黒帯候補", sound:"rankHigh"}
- return {name:"師範級🔥", sound:"rankHigh"}
+ if(s<50) return "見習い"
+ if(s<150) return "初級"
+ if(s<300) return "中級"
+ if(s<500) return "上級"
+ if(s<800) return "黒帯候補"
+ return "師範級🔥"
 }
 
 // 色生成
 function nextTarget(){
  const r=Math.random()
-
- if(r<0.4){
-   type="blue"
-   target.style.background="blue"
- }
- else if(r<0.75){
-   type="green"
-   target.style.background="green"
- }
- else{
-   type="red"
-   target.style.background="red"
- }
+ if(r<0.4){type="blue";target.style.background="blue"}
+ else if(r<0.75){type="green";target.style.background="green"}
+ else{type="red";target.style.background="red"}
 }
 
 // 押した時
-target.addEventListener("click",()=>{
-
+target.onclick=()=>{
  if(!playing)return
 
- document.getElementById("hit").currentTime=0
  document.getElementById("hit").play()
 
  if(type==="blue"){
    score+=10
    combo++
  }
-
  else if(type==="green"){
    combo++
    score+=combo*2
  }
-
- else if(type==="red"){
+ else{
    score=0
    combo=0
 
-   if(navigator.vibrate){
-     navigator.vibrate(200)
-   }
-
+   if(navigator.vibrate) navigator.vibrate(200)
    document.body.classList.add("flash")
    setTimeout(()=>document.body.classList.remove("flash"),200)
  }
 
  update()
  nextTarget()
-})
+}
 
-// 表示更新
+// 更新
 function update(){
  scoreEl.textContent=score
  comboEl.textContent=combo
 }
 
 // スタート
-document.getElementById("startBtn").onclick=()=>{
-
- clearInterval(timer)
-
+startBtn.onclick=()=>{
  score=0
  combo=0
  time=30
  playing=true
+ sendBtn.disabled=true
 
- document.getElementById("bgm").volume=0.25
+ document.getElementById("bgm").volume=0.2
  document.getElementById("bgm").play()
 
  update()
@@ -186,21 +157,25 @@ document.getElementById("startBtn").onclick=()=>{
 
      document.getElementById("bgm").pause()
      document.getElementById("end").play()
+     document.getElementById("rankHigh").play()
 
-     const r=getRank(score)
-     document.getElementById(r.sound).play()
+     alert("終了！\nスコア："+score+"\nランク："+getRank(score))
 
-     setTimeout(()=>{
-       alert("終了！\nスコア："+score+"\nランク："+r.name)
-     },300)
+     sendBtn.disabled=false
    }
-
  },1000)
 }
 
-// 再挑戦
-document.getElementById("retryBtn").onclick=()=>{
- location.reload()
+// ランキング送信（GAS）
+sendBtn.onclick=()=>{
+ const name=prompt("名前を入力")
+ if(!name)return
+
+ fetch("https://script.google.com/macros/s/AKfycbw3iOC_7EBRqfXUZjnblOXdTI8gcLcpA8RqEf_lurK9YQhcO5AduBAMJBLo71qfbHET/exec",{
+   method:"POST",
+   body:JSON.stringify({name:name,score:score})
+ })
+ alert("送信しました！")
 }
 </script>
 
