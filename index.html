@@ -1,182 +1,219 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>館長の神ゲー「赤はおさないで」</title>
+<title>赤はおさないで</title>
 
 <style>
+
 body{
   margin:0;
   font-family:sans-serif;
   text-align:center;
-  background:linear-gradient(180deg,#0f2027,#203a43,#2c5364);
   color:white;
+  height:100vh;
+  overflow:hidden;
+
+  background:linear-gradient(-45deg,#0f2027,#203a43,#2c5364,#1a2a6c);
+  background-size:400% 400%;
+  animation:bgMove 12s ease infinite;
 }
 
+/* 背景アニメーション */
+@keyframes bgMove{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+/* 浮遊粒子 */
+body::after{
+  content:"";
+  position:fixed;
+  top:0;
+  left:0;
+  width:200%;
+  height:200%;
+  background-image:radial-gradient(white 1px, transparent 1px);
+  background-size:40px 40px;
+  opacity:0.15;
+  animation:stars 40s linear infinite;
+}
+
+@keyframes stars{
+  from{transform:translate(0,0);}
+  to{transform:translate(-200px,-200px);}
+}
+
+
+/* タイトル */
 h1{
   margin-top:15px;
-  text-shadow:0 0 10px cyan;
+  font-size:36px;
+  line-height:1.2;
 }
 
-#game{
-  margin-top:20px;
-}
-
-.circle{
-  width:150px;
-  height:150px;
-  border-radius:50%;
-  margin:30px auto;
-  box-shadow:0 0 25px rgba(255,255,255,0.8);
-}
-
-button{
-  font-size:18px;
-  padding:10px 20px;
-  margin:5px;
-  border-radius:10px;
-  border:none;
-  background:#111;
-  color:white;
-  box-shadow:0 0 10px cyan;
-}
-
-#msg{
+#sub{
   font-size:26px;
-  height:30px;
-  margin-top:10px;
+  margin-bottom:10px;
 }
 
-#score,#time,#rank{
-  font-size:20px;
-  margin:5px;
+/* 情報 */
+#info{
+  font-size:22px;
 }
+
+/* メッセージ */
+#msg{
+  height:40px;
+  font-size:28px;
+  font-weight:bold;
+}
+
+/* ボタン */
+button{
+  font-size:20px;
+  padding:10px 20px;
+  margin:10px;
+}
+
+/* 押す丸 */
+#circle{
+  width:170px;
+  height:170px;
+  border-radius:50%;
+  margin:20px auto;
+  box-shadow:0 0 25px rgba(255,255,255,0.6);
+  transition:0.15s;
+}
+
+.flash{
+  animation:flash 0.25s;
+}
+
+@keyframes flash{
+  from{background:white;}
+  to{background:inherit;}
+}
+
 </style>
 </head>
 
 <body>
 
-<h1>館長の神ゲー<br>「赤はおさないで」</h1>
+<h1>館長の神ゲー</h1>
+<div id="sub">赤はおさないで</div>
 
-<div id="score">Score: 0</div>
-<div id="time">Time: 30</div>
-<div id="rank"></div>
-
-<button onclick="startGame()">スタート</button>
-<button onclick="startGame()">再挑戦</button>
-
-<div id="game">
-  <div id="circle" class="circle"></div>
+<div id="info">
+スコア: <span id="score">0</span>
+コンボ: <span id="combo">0</span>
+残り: <span id="time">30</span>
 </div>
 
 <div id="msg"></div>
 
+<div id="circle"></div>
+
+<button onclick="start()">スタート</button>
+<button onclick="retry()">再挑戦</button>
+
+<audio id="bgm" loop>
+<source src="https://actions.google.com/sounds/v1/ambiences/bird_forest.ogg">
+</audio>
+
 <script>
+
 let score=0;
 let combo=0;
 let time=30;
-let playing=false;
-let currentColor="";
+let running=false;
+let color="blue";
 let timer;
-let colorTimer;
+let changer;
 
 const circle=document.getElementById("circle");
+const msg=document.getElementById("msg");
+const bgm=document.getElementById("bgm");
 
-function randomColor(){
+function randColor(){
   const r=Math.random();
-  if(r<0.4) return "blue";
-  if(r<0.8) return "green";
-  return "red";
+  if(r<0.4) color="blue";
+  else if(r<0.8) color="green";
+  else color="red";
+  circle.style.background=color;
 }
 
-function showColor(){
-  currentColor=randomColor();
-  circle.style.background=currentColor;
-}
+circle.onclick=()=>{
+  if(!running) return;
 
-circle.addEventListener("click",()=>{
-  if(!playing) return;
+  if(color==="blue"){
+    score++;
+    combo++;
+    msg.innerText="いいよ";
+  }
 
-  if(currentColor==="blue"){
-    score+=1+combo;
+  if(color==="green"){
+    score+=3;
     combo++;
-    msg("いいよ");
+    msg.innerText="さいこー";
   }
-  else if(currentColor==="green"){
-    score+=3+combo;
-    combo++;
-    msg("さいこー");
-  }
-  else if(currentColor==="red"){
+
+  if(color==="red"){
     score=0;
     combo=0;
-    flash();
-    if(navigator.vibrate) navigator.vibrate(200);
-    msg("いやーん");
+    msg.innerText="いやーん";
+
+    circle.classList.add("flash");
+    setTimeout(()=>circle.classList.remove("flash"),200);
+
+    if(navigator.vibrate)
+      navigator.vibrate(200);
   }
 
-  updateScore();
-});
+  update();
+};
 
-function msg(t){
-  document.getElementById("msg").innerText=t;
+function update(){
+  document.getElementById("score").innerText=score;
+  document.getElementById("combo").innerText=combo;
 }
 
-function flash(){
-  document.body.style.background="white";
-  setTimeout(()=>{
-    document.body.style.background=
-      "linear-gradient(180deg,#0f2027,#203a43,#2c5364)";
-  },100);
-}
-
-function updateScore(){
-  document.getElementById("score").innerText="Score: "+score;
-}
-
-function startGame(){
+function start(){
   score=0;
   combo=0;
   time=30;
-  playing=true;
-  document.getElementById("rank").innerText="";
-  updateScore();
-  document.getElementById("time").innerText="Time: "+time;
+  running=true;
 
-  clearInterval(timer);
-  clearInterval(colorTimer);
+  bgm.currentTime=0;
+  bgm.play();
+
+  update();
 
   timer=setInterval(()=>{
     time--;
-    document.getElementById("time").innerText="Time: "+time;
-    if(time<=0){
-      endGame();
-    }
+    document.getElementById("time").innerText=time;
+    if(time<=0) end();
   },1000);
 
-  colorTimer=setInterval(()=>{
-    showColor();
-  },700);
+  changer=setInterval(randColor,700);
 }
 
-function endGame(){
-  playing=false;
+function retry(){
   clearInterval(timer);
-  clearInterval(colorTimer);
-  circle.style.background="gray";
-  rank();
+  clearInterval(changer);
+  start();
 }
 
-function rank(){
-  let r="E";
-  if(score>20) r="D";
-  if(score>40) r="C";
-  if(score>60) r="B";
-  if(score>90) r="A";
-  if(score>130) r="S";
-
-  document.getElementById("rank").innerText="ランク: "+r;
+function end(){
+  running=false;
+  clearInterval(timer);
+  clearInterval(changer);
+  bgm.pause();
+  msg.innerText="終了！";
 }
+
+randColor();
+
 </script>
 
 </body>
