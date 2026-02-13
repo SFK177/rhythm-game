@@ -19,6 +19,13 @@ body{
  background:gray;
 }
 
+#msg{
+ height:40px;
+ font-size:28px;
+ font-weight:bold;
+ color:#222;
+}
+
 button{
  font-size:18px;
  padding:10px 20px;
@@ -40,6 +47,8 @@ button{
 
 <h2>正拳中段突き 判断チャレンジ</h2>
 
+<div id="msg"></div>
+
 <div id="target"></div>
 
 <div>スコア：<span id="score">0</span></div>
@@ -59,10 +68,6 @@ button{
 <source src="https://www.soundjay.com/button/sounds/button-16.mp3">
 </audio>
 
-<audio id="end">
-<source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3">
-</audio>
-
 <script>
 let score=0
 let combo=0
@@ -77,6 +82,12 @@ const scoreEl=document.getElementById("score")
 const comboEl=document.getElementById("combo")
 const timeEl=document.getElementById("time")
 const sendBtn=document.getElementById("sendBtn")
+const msg=document.getElementById("msg")
+
+function showMsg(text){
+ msg.textContent=text
+ setTimeout(()=>msg.textContent="",900)
+}
 
 function getRank(s){
  if(s<50) return "見習い"
@@ -103,14 +114,19 @@ target.onclick=()=>{
  if(type==="blue"){
    score+=10
    combo++
+   showMsg("いいよ")
  }
+
  else if(type==="green"){
    combo++
    score+=combo*2
+   showMsg("さいこー")
  }
+
  else{
    score=0
    combo=0
+   showMsg("いやーん")
 
    if(navigator.vibrate) navigator.vibrate(200)
    document.body.classList.add("flash")
@@ -141,7 +157,6 @@ startBtn.onclick=()=>{
  nextTarget()
  timeEl.textContent=time
 
- // 色自動変化
  colorTimer=setInterval(()=>{
    if(playing) nextTarget()
  },800)
@@ -156,10 +171,8 @@ startBtn.onclick=()=>{
      playing=false
 
      document.getElementById("bgm").pause()
-     document.getElementById("end").play()
 
      alert("終了！\nスコア："+score+"\nランク："+getRank(score))
-
      sendBtn.disabled=false
    }
  },1000)
