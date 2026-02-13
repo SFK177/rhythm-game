@@ -1,98 +1,154 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>正拳中段突きチャレンジ</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{text-align:center;font-family:sans-serif;background:#f5f5f5;}
-#btn{
- width:200px;height:200px;background:black;color:white;
- border-radius:50%;font-size:22px;margin:40px auto;
- line-height:200px;box-shadow:0 10px 25px rgba(0,0,0,.4);
+body{
+  font-family:sans-serif;
+  text-align:center;
+  background:#111;
+  color:white;
 }
-#btn:active{transform:scale(.9);background:red;}
-button{font-size:18px;padding:10px 20px;margin:10px;}
+
+#target{
+  width:200px;
+  height:200px;
+  margin:20px auto;
+  border-radius:20px;
+}
+
+button{
+  font-size:18px;
+  padding:12px 20px;
+  margin:5px;
+}
+
+#score{font-size:24px;}
+#combo{font-size:20px;color:gold;}
+#time{font-size:20px;}
 </style>
 </head>
 
 <body>
 
-<h2>正拳中段突きチャレンジ</h2>
+<h2>🥋 判断トレーニング</h2>
 
-<div id="btn">押忍！</div>
+<div id="time">30</div>
+<div id="score">Score:0</div>
+<div id="combo">Combo:0</div>
 
-<p id="time">残り時間: 30</p>
-<p id="score">スコア: 0</p>
+<div id="target"></div>
 
-<button onclick="startGame()">スタート</button>
-<button onclick="sendScore()" id="rankBtn" disabled>ランキング登録</button>
-
-<audio id="hitSound" src="https://www.soundjay.com/mechanical/sounds/swish-1.mp3"></audio>
-<audio id="endSound" src="https://www.soundjay.com/button/sounds/beep-07.mp3"></audio>
+<button id="tapBtn">反応！</button>
+<br>
+<button id="startBtn">スタート</button>
+<button id="retryBtn" style="display:none;">再挑戦</button>
 
 <script>
+const scriptURL="https://script.google.com/macros/s/AKfycbw3iOC_7EBRqfXUZjnblOXdTI8gcLcpA8RqEf_lurK9YQhcO5AduBAMJBLo71qfbHET/exec";
+
 let score=0;
+let combo=0;
 let time=30;
-let playing=false;
-let timer;
+let game=false;
+let current="";
 
-const btn=document.getElementById("btn");
-const scoreText=document.getElementById("score");
-const timeText=document.getElementById("time");
-const rankBtn=document.getElementById("rankBtn");
+const target=document.getElementById("target");
 
-const hitSound=document.getElementById("hitSound");
-const endSound=document.getElementById("endSound");
+const ctx=new(window.AudioContext||window.webkitAudioContext)();
 
-// 音解除
-document.body.addEventListener("touchstart",()=>{
- hitSound.play().then(()=>hitSound.pause());
-},{once:true});
+function beep(freq){
+ let o=ctx.createOscillator();
+ let g=ctx.createGain();
+ o.connect(g);
+ g.connect(ctx.destination);
+ o.frequency.value=freq;
+ o.start();
+ g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.2);
+}
 
-btn.addEventListener("click",()=>{
- if(!playing) return;
- score++;
- scoreText.textContent="スコア: "+score;
- hitSound.currentTime=0;
- hitSound.play();
-});
+function randomTarget(){
+ if(!game)return;
 
-function startGame(){
+ let r=Math.random();
+
+ if(r<0.33){
+   target.style.background="blue";
+   current="hit";
+ }
+ else if(r<0.66){
+   target.style.background="green";
+   current="hit";
+ }
+ else{
+   target.style.background="red";
+   current="no";
+ }
+
+ setTimeout(randomTarget,800);
+}
+
+document.getElementById("tapBtn").onclick=()=>{
+ if(!game)return;
+
+ if(current==="hit"){
+   combo++;
+   score+=1+Math.floor(combo/5);
+   beep(700);
+ }
+ else{
+   combo=0;
+   score=Math.max(0,score-1);
+   beep(200);
+ }
+
+ update();
+}
+
+function update(){
+ document.getElementById("score").innerText="Score:"+score;
+ document.getElementById("combo").innerText="Combo:"+combo;
+}
+
+document.getElementById("startBtn").onclick=()=>{
+ ctx.resume();
  score=0;
+ combo=0;
  time=30;
- playing=true;
- rankBtn.disabled=true;
+ game=true;
+ update();
 
- scoreText.textContent="スコア: 0";
- timeText.textContent="残り時間: 30";
+ document.getElementById("retryBtn").style.display="none";
 
- timer=setInterval(()=>{
+ randomTarget();
+
+ let timer=setInterval(()=>{
    time--;
-   timeText.textContent="残り時間: "+time;
+   document.getElementById("time").innerText=time;
 
    if(time<=0){
      clearInterval(timer);
-     playing=false;
-     endSound.play();
-     rankBtn.disabled=false;
+     game=false;
+     target.style.background="black";
+     beep(100);
+
+     let name=prompt("名前入力");
+     if(name){
+       fetch(scriptURL,{
+         method:"POST",
+         body:JSON.stringify({name:name,score:score})
+       });
+     }
+
+     document.getElementById("retryBtn").style.display="inline";
    }
+
  },1000);
 }
 
-// ランキング送信
-function sendScore(){
- const name=prompt("名前を入力してください");
- if(!name) return;
-
- fetch("https://script.google.com/macros/s/AKfycbw3iOC_7EBRqfXUZjnblOXdTI8gcLcpA8RqEf_lurK9YQhcO5AduBAMJBLo71qfbHET/exec",{
-   method:"POST",
-   body:JSON.stringify({name:name,score:score})
- })
- .then(()=>alert("登録しました！"))
- .catch(()=>alert("送信失敗"));
+document.getElementById("retryBtn").onclick=()=>{
+ document.getElementById("startBtn").click();
 }
 </script>
-
 </body>
 </html>
