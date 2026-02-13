@@ -2,8 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>正拳中段突きチャレンジ</title>
+<title>正拳中段突き判断チャレンジ</title>
 
 <style>
 body{
@@ -13,24 +12,25 @@ body{
 }
 
 h1{
-  margin-top:30px;
+  margin-top:20px;
 }
 
 #target{
   width:220px;
   height:220px;
-  margin:40px auto;
+  margin:30px auto;
   border-radius:50%;
+  background:gray;
 }
 
 button{
   font-size:20px;
-  padding:10px 20px;
-  margin:10px;
+  padding:12px 22px;
+  margin:8px;
 }
 
 .flash{
-  animation:flashRed 0.2s;
+  animation:flashRed 0.25s;
 }
 
 @keyframes flashRed{
@@ -46,12 +46,12 @@ button{
 
 <div id="target"></div>
 
-<div>スコア: <span id="score">0</span></div>
-<div>コンボ: <span id="combo">0</span></div>
-<div>残り: <span id="time">30</span> 秒</div>
+<div>スコア：<span id="score">0</span></div>
+<div>コンボ：<span id="combo">0</span></div>
+<div>残り：<span id="time">30</span>秒</div>
 
 <button id="startBtn">スタート</button>
-<button onclick="location.reload()">再挑戦</button>
+<button id="retryBtn">再挑戦</button>
 
 <!-- 音 -->
 <audio id="bgm" loop>
@@ -59,14 +59,13 @@ button{
 </audio>
 
 <audio id="hit">
-<source src="https://www.soundjay.com/mechanical/sounds/switch-3.mp3">
+<source src="https://www.soundjay.com/button/sounds/button-16.mp3">
 </audio>
 
 <audio id="end">
 <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3">
 </audio>
 
-<!-- ランク音 -->
 <audio id="rankLow">
 <source src="https://www.soundjay.com/button/sounds/button-10.mp3">
 </audio>
@@ -85,32 +84,47 @@ let combo=0
 let time=30
 let playing=false
 let type="blue"
+let timer
 
-// ランク判定
+const target=document.getElementById("target")
+const scoreEl=document.getElementById("score")
+const comboEl=document.getElementById("combo")
+const timeEl=document.getElementById("time")
+
+// ランク
 function getRank(s){
-
  if(s<50) return {name:"見習い", sound:"rankLow"}
  if(s<150) return {name:"初級", sound:"rankLow"}
  if(s<300) return {name:"中級", sound:"rankMid"}
  if(s<500) return {name:"上級", sound:"rankMid"}
  if(s<800) return {name:"黒帯候補", sound:"rankHigh"}
-
- return {name:"師範級 🔥", sound:"rankHigh"}
+ return {name:"師範級🔥", sound:"rankHigh"}
 }
 
 // 色生成
 function nextTarget(){
  const r=Math.random()
 
- if(r<0.4){type="blue";target.style.background="blue"}
- else if(r<0.75){type="green";target.style.background="green"}
- else{type="red";target.style.background="red"}
+ if(r<0.4){
+   type="blue"
+   target.style.background="blue"
+ }
+ else if(r<0.75){
+   type="green"
+   target.style.background="green"
+ }
+ else{
+   type="red"
+   target.style.background="red"
+ }
 }
 
 // 押した時
-target.onclick=()=>{
+target.addEventListener("click",()=>{
+
  if(!playing)return
 
+ document.getElementById("hit").currentTime=0
  document.getElementById("hit").play()
 
  if(type==="blue"){
@@ -127,7 +141,9 @@ target.onclick=()=>{
    score=0
    combo=0
 
-   if(navigator.vibrate) navigator.vibrate(200)
+   if(navigator.vibrate){
+     navigator.vibrate(200)
+   }
 
    document.body.classList.add("flash")
    setTimeout(()=>document.body.classList.remove("flash"),200)
@@ -135,31 +151,32 @@ target.onclick=()=>{
 
  update()
  nextTarget()
-}
+})
 
-// 更新表示
+// 表示更新
 function update(){
  scoreEl.textContent=score
  comboEl.textContent=combo
 }
 
 // スタート
-startBtn.onclick=()=>{
+document.getElementById("startBtn").onclick=()=>{
+
+ clearInterval(timer)
 
  score=0
  combo=0
  time=30
  playing=true
 
- document.getElementById("bgm").volume=0.3
+ document.getElementById("bgm").volume=0.25
  document.getElementById("bgm").play()
 
- nextTarget()
  update()
+ nextTarget()
  timeEl.textContent=time
 
- const timer=setInterval(()=>{
-
+ timer=setInterval(()=>{
    time--
    timeEl.textContent=time
 
@@ -170,23 +187,21 @@ startBtn.onclick=()=>{
      document.getElementById("bgm").pause()
      document.getElementById("end").play()
 
-     const result=getRank(score)
-
-     document.getElementById(result.sound).play()
+     const r=getRank(score)
+     document.getElementById(r.sound).play()
 
      setTimeout(()=>{
-       alert("終了！\nスコア:"+score+"\nランク："+result.name)
+       alert("終了！\nスコア："+score+"\nランク："+r.name)
      },300)
    }
 
  },1000)
 }
 
-const target=document.getElementById("target")
-const scoreEl=document.getElementById("score")
-const comboEl=document.getElementById("combo")
-const timeEl=document.getElementById("time")
-const startBtn=document.getElementById("startBtn")
+// 再挑戦
+document.getElementById("retryBtn").onclick=()=>{
+ location.reload()
+}
 </script>
 
 </body>
