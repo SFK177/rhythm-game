@@ -2,7 +2,8 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>突き判断チャレンジ</title>
+
+<title>正拳中段突きチャレンジ</title>
 
 <style>
 body{
@@ -11,50 +12,71 @@ body{
   background:#f5f5f5;
 }
 
-#btn{
+h1{
+  margin-top:30px;
+}
+
+#target{
   width:220px;
   height:220px;
-  border-radius:50%;
   margin:40px auto;
-  line-height:220px;
-  font-size:26px;
-  color:white;
-  user-select:none;
+  border-radius:50%;
 }
 
-#startBtn,#retryBtn{
-  padding:12px 24px;
-  font-size:18px;
-  margin-top:10px;
+button{
+  font-size:20px;
+  padding:10px 20px;
+  margin:10px;
 }
 
-#score,#combo,#time{
-  font-size:22px;
-  margin:6px;
+.flash{
+  animation:flashRed 0.2s;
+}
+
+@keyframes flashRed{
+  0%{background:#ff0000;}
+  100%{background:#f5f5f5;}
 }
 </style>
 </head>
 
 <body>
 
-<h2>突き判断チャレンジ</h2>
+<h1>正拳中段突き<br>判断チャレンジ</h1>
 
-<div id="time">残り30秒</div>
-<div id="score">スコア:0</div>
-<div id="combo">コンボ:0</div>
+<div id="target"></div>
 
-<div id="btn" style="background:gray">待機</div>
+<div>スコア: <span id="score">0</span></div>
+<div>コンボ: <span id="combo">0</span></div>
+<div>残り: <span id="time">30</span> 秒</div>
 
 <button id="startBtn">スタート</button>
-<button id="retryBtn" style="display:none">もう一回</button>
+<button onclick="location.reload()">再挑戦</button>
 
-<!-- 効果音 -->
-<audio id="hit" src="https://www.soundjay.com/mechanical/sounds/swish-1.mp3"></audio>
-<audio id="end" src="https://www.soundjay.com/button/beep-10.mp3"></audio>
-
-<!-- 🎵 BGM -->
+<!-- 音 -->
 <audio id="bgm" loop>
- <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
+<source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
+</audio>
+
+<audio id="hit">
+<source src="https://www.soundjay.com/mechanical/sounds/switch-3.mp3">
+</audio>
+
+<audio id="end">
+<source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3">
+</audio>
+
+<!-- ランク音 -->
+<audio id="rankLow">
+<source src="https://www.soundjay.com/button/sounds/button-10.mp3">
+</audio>
+
+<audio id="rankMid">
+<source src="https://www.soundjay.com/button/sounds/button-4.mp3">
+</audio>
+
+<audio id="rankHigh">
+<source src="https://www.soundjay.com/misc/sounds/fanfare-1.mp3">
 </audio>
 
 <script>
@@ -62,117 +84,109 @@ let score=0
 let combo=0
 let time=30
 let playing=false
-let timer
-let colorTimer
+let type="blue"
 
-const btn=document.getElementById("btn")
-const scoreText=document.getElementById("score")
-const comboText=document.getElementById("combo")
-const timeText=document.getElementById("time")
+// ランク判定
+function getRank(s){
 
-const hit=document.getElementById("hit")
-const end=document.getElementById("end")
-const bgm=document.getElementById("bgm")
+ if(s<50) return {name:"見習い", sound:"rankLow"}
+ if(s<150) return {name:"初級", sound:"rankLow"}
+ if(s<300) return {name:"中級", sound:"rankMid"}
+ if(s<500) return {name:"上級", sound:"rankMid"}
+ if(s<800) return {name:"黒帯候補", sound:"rankHigh"}
 
-// 色出現
-function spawn(){
- const r=Math.random()
- if(r<0.5){
-   btn.style.background="blue"
-   btn.dataset.type="blue"
-   btn.textContent="突け！"
- }else if(r<0.8){
-   btn.style.background="green"
-   btn.dataset.type="green"
-   btn.textContent="速突き！"
- }else{
-   btn.style.background="red"
-   btn.dataset.type="red"
-   btn.textContent="止まれ！"
- }
+ return {name:"師範級 🔥", sound:"rankHigh"}
 }
 
-// 押した判定
-btn.onclick=()=>{
+// 色生成
+function nextTarget(){
+ const r=Math.random()
+
+ if(r<0.4){type="blue";target.style.background="blue"}
+ else if(r<0.75){type="green";target.style.background="green"}
+ else{type="red";target.style.background="red"}
+}
+
+// 押した時
+target.onclick=()=>{
  if(!playing)return
 
- hit.currentTime=0
- hit.play()
-
- const type=btn.dataset.type
+ document.getElementById("hit").play()
 
  if(type==="blue"){
+   score+=10
    combo++
-   score+=10*combo
  }
+
  else if(type==="green"){
    combo++
-   score+=30*combo
+   score+=combo*2
  }
+
  else if(type==="red"){
    score=0
    combo=0
+
+   if(navigator.vibrate) navigator.vibrate(200)
+
+   document.body.classList.add("flash")
+   setTimeout(()=>document.body.classList.remove("flash"),200)
  }
 
- scoreText.textContent="スコア:"+score
- comboText.textContent="コンボ:"+combo
+ update()
+ nextTarget()
+}
+
+// 更新表示
+function update(){
+ scoreEl.textContent=score
+ comboEl.textContent=combo
 }
 
 // スタート
-document.getElementById("startBtn").onclick=()=>{
+startBtn.onclick=()=>{
+
  score=0
  combo=0
  time=30
  playing=true
 
- // 🎵BGM開始（スマホ対応）
- bgm.volume=0.3
- bgm.currentTime=0
- bgm.play()
+ document.getElementById("bgm").volume=0.3
+ document.getElementById("bgm").play()
 
- scoreText.textContent="スコア:0"
- comboText.textContent="コンボ:0"
- timeText.textContent="残り30秒"
+ nextTarget()
+ update()
+ timeEl.textContent=time
 
- spawn()
- colorTimer=setInterval(spawn,900)
+ const timer=setInterval(()=>{
 
- timer=setInterval(()=>{
-  time--
-  timeText.textContent="残り"+time+"秒"
-  if(time<=0)endGame()
+   time--
+   timeEl.textContent=time
+
+   if(time<=0){
+     clearInterval(timer)
+     playing=false
+
+     document.getElementById("bgm").pause()
+     document.getElementById("end").play()
+
+     const result=getRank(score)
+
+     document.getElementById(result.sound).play()
+
+     setTimeout(()=>{
+       alert("終了！\nスコア:"+score+"\nランク："+result.name)
+     },300)
+   }
+
  },1000)
 }
 
-// 終了
-function endGame(){
- playing=false
- clearInterval(timer)
- clearInterval(colorTimer)
-
- btn.style.background="gray"
- btn.textContent="終了"
-
- end.play()
- bgm.pause()
-
- document.getElementById("retryBtn").style.display="inline"
-
- // ランキング送信
- const name=prompt("名前を入力")
- if(name){
- fetch("https://script.google.com/macros/s/AKfycbw3iOC_7EBRqfXUZjnblOXdTI8gcLcpA8RqEf_lurK9YQhcO5AduBAMJBLo71qfbHET/exec",{
-   method:"POST",
-   body:JSON.stringify({name:name,score:score})
- })
- }
-}
-
-// 再挑戦
-document.getElementById("retryBtn").onclick=()=>{
- document.getElementById("retryBtn").style.display="none"
- document.getElementById("startBtn").click()
-}
+const target=document.getElementById("target")
+const scoreEl=document.getElementById("score")
+const comboEl=document.getElementById("combo")
+const timeEl=document.getElementById("time")
+const startBtn=document.getElementById("startBtn")
 </script>
 
 </body>
