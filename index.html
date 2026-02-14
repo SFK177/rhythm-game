@@ -1,118 +1,101 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>赤を押したらいやん</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>館長の神ゲー</title>
 
 <style>
 body{
-    margin:0;
-    font-family:sans-serif;
-    text-align:center;
-    color:white;
-    background:linear-gradient(270deg,#0f2027,#203a43,#2c5364);
-    background-size:600% 600%;
-    animation:bg 10s ease infinite;
+  margin:0;
+  font-family:sans-serif;
+  background:linear-gradient(#0f2027,#203a43);
+  color:white;
+  text-align:center;
 }
-@keyframes bg{
-0%{background-position:0% 50%;}
-50%{background-position:100% 50%;}
-100%{background-position:0% 50%;}
-}
-
-h1{font-size:32px;margin:10px;}
 
 #circle{
-    width:180px;
-    height:180px;
-    border-radius:50%;
-    margin:40px auto;
-    box-shadow:0 0 20px black inset;
+  width:160px;
+  height:160px;
+  border-radius:50%;
+  margin:40px auto;
+  background:red;
+  box-shadow:0 0 40px rgba(0,0,0,0.5);
 }
 
 button{
-    font-size:20px;
-    padding:10px 25px;
-    border-radius:10px;
+  font-size:20px;
+  padding:10px 20px;
 }
-
-#msg{font-size:26px;height:30px;}
 </style>
 </head>
 
 <body>
 
-<h1>館長の神ゲー<br>赤を押したらいやん</h1>
+<h2>館長の神ゲー<br>赤を押したらいやん</h2>
 
 <div id="score">Score:0</div>
 <div id="circle"></div>
-<div id="msg"></div>
 
-<button onclick="start()">スタート</button>
+<button onclick="startGame()">スタート</button>
 
 <script>
 
-const URL="https://script.google.com/macros/s/AKfycbzSt5ojOfCBkLGf4wr7SQpTaYbnxLe5n0PTa0CRxYaEO64EXhajH94CunkZb_kNrbEN/exec"
+const GAS_URL="https://script.google.com/macros/s/AKfycbxvmVtjmGDgewahlPtg-VnxIpee24NAEffgnpyLcMZPwEY4xbefdV24PdbWUTqVoA6K/exec";
 
-let score=0
-let combo=0
-let running=false
+let score=0;
+let playing=false;
 
-function start(){
- score=0
- combo=0
- running=true
- next()
+function startGame(){
+ score=0;
+ playing=true;
+ document.getElementById("score").innerText="Score:0";
+ next();
+ setTimeout(endGame,15000);
 }
 
 function next(){
- if(!running)return
+ if(!playing) return;
 
- const colors=["blue","green","red"]
- const c=colors[Math.floor(Math.random()*3)]
- circle.style.background=c
+ let colors=["red","blue","green","yellow"];
+ let c=colors[Math.floor(Math.random()*colors.length)];
+
+ let circle=document.getElementById("circle");
+ circle.style.background=c;
 
  circle.onclick=()=>{
-    if(c==="blue"){
-        score+=10+combo
-        combo++
-        msg.textContent="いいよ"
-    }
-    if(c==="green"){
-        score+=20+combo
-        combo++
-        msg.textContent="さいこー"
-    }
-    if(c==="red"){
-        score=0
-        combo=0
-        msg.textContent="いやーん"
-    }
-    scoreDisplay()
-    setTimeout(next,300)
+   if(!playing) return;
+
+   if(c==="red"){
+     score--;
+   }else{
+     score++;
+   }
+   document.getElementById("score").innerText="Score:"+score;
+   next();
  }
 }
 
-function scoreDisplay(){
- document.getElementById("score").textContent="Score:"+score
+function endGame(){
+ playing=false;
+
+ let name=prompt("名前入れて下さい");
+ if(!name) name="名無し";
+
+ fetch(GAS_URL,{
+   method:"POST",
+   mode:"no-cors",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({
+     Name:name,
+     Score:score,
+     Game:"判断ゲーム",
+     Date:new Date().toLocaleString()
+   })
+ });
+
+ alert("終了！ Score:"+score);
 }
-
-window.onbeforeunload=sendScore
-
-function sendScore(){
- const name=prompt("名前入力（ランキング送信）")
- if(!name)return
-
- fetch(URL,{
-  method:"POST",
-  body:JSON.stringify({
-    name:name,
-    score:score,
-    game:"判断ゲーム"
-  })
- })
-}
-
 </script>
 </body>
 </html>
