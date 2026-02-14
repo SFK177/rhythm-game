@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>館長の神ゲー：リズム修行</title>
+
+<style>
+body{
+    margin:0;
+    background:#111;
+    color:white;
+    font-family:sans-serif;
+    text-align:center;
+}
+
+h1{
+    margin:10px;
+}
+
+#game{
+    position:relative;
+    width:320px;
+    height:480px;
+    margin:auto;
+    background:#000;
+    border:3px solid #444;
+    overflow:hidden;
+}
+
+.lane{
+    position:absolute;
+    width:25%;
+    height:100%;
+    border-left:1px solid #222;
+}
+
+.note{
+    position:absolute;
+    width:25%;
+    height:20px;
+    background:#0af;
+    border-radius:6px;
+}
+
+#hitLine{
+    position:absolute;
+    bottom:60px;
+    width:100%;
+    height:4px;
+    background:#fff;
+}
+
+button{
+    margin:10px;
+    font-size:18px;
+    padding:10px 20px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>リズム修行</h1>
+
+<div id="game">
+    <div class="lane" style="left:0%"></div>
+    <div class="lane" style="left:25%"></div>
+    <div class="lane" style="left:50%"></div>
+    <div class="lane" style="left:75%"></div>
+    <div id="hitLine"></div>
+</div>
+
+<button onclick="start()">スタート</button>
+
+<script>
+let notes=[];
+let playing=false;
+
+function spawn(){
+    let lane=Math.floor(Math.random()*4);
+    let n=document.createElement("div");
+    n.className="note";
+    n.style.left=(lane*25)+"%";
+    n.style.top="-20px";
+    n.dataset.lane=lane;
+    document.getElementById("game").appendChild(n);
+    notes.push(n);
+}
+
+function start(){
+    if(playing) return;
+    playing=true;
+    setInterval(spawn,700);
+}
+
+document.addEventListener("keydown",e=>{
+    let keyMap={
+        "d":0,
+        "f":1,
+        "j":2,
+        "k":3
+    };
+    if(!(e.key in keyMap)) return;
+
+    let lane=keyMap[e.key];
+    let hitY=420;
+
+    for(let i=0;i<notes.length;i++){
+        let rect=notes[i].getBoundingClientRect();
+        let gameRect=document.getElementById("game").getBoundingClientRect();
+        let y=rect.top-gameRect.top;
+
+        if(notes[i].dataset.lane==lane && Math.abs(y-hitY)<40){
+            notes[i].remove();
+            notes.splice(i,1);
+            return;
+        }
+    }
+});
+
+function update(){
+    notes.forEach(n=>{
+        let y=parseFloat(n.style.top);
+        y+=4;
+        n.style.top=y+"px";
+    });
+    requestAnimationFrame(update);
+}
+update();
+</script>
+
+</body>
+</html>
