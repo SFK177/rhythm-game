@@ -111,6 +111,8 @@ circle.onclick = ()=>{
     score += 1;
     combo++;
   }else{ // 赤
+    score -= 3;         // ← 赤を押したらマイナス3点
+    if(score<0) score=0; // スコアがマイナスにならないように
     combo = 0;
     document.body.classList.add("flash");
     navigator.vibrate(200);
