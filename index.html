@@ -1,45 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>館長の神ゲー 赤を押したらいやん</title>
+
 <style>
 body{
-margin:0;
-font-family:sans-serif;
-background:#0b1d26;
-text-align:center;
-overflow:hidden;
+  margin:0;
+  font-family:sans-serif;
+  background: linear-gradient(#0b1d26,#0f2a3c);
+  text-align:center;
+  overflow:hidden;
+}
+
+h2{
+  color:white;
+  margin-top:20px;
+}
+
+#score, #combo, #timer{
+  font-size:20px;
+  color:white;
+  margin:5px;
 }
 
 #circle{
-width:180px;
-height:180px;
-border-radius:50%;
-margin:50px auto;
+  width:180px;
+  height:180px;
+  border-radius:50%;
+  margin:50px auto;
+  background:red;
+  box-shadow:0 0 40px rgba(0,0,0,0.5);
 }
 
-#score{color:white;font-size:22px}
-#combo{color:yellow}
-#timer{color:white}
-
 button{
-padding:12px 24px;
-font-size:18px;
+  padding:12px 24px;
+  font-size:18px;
+  border-radius:8px;
 }
 
 .flash{
-animation:flash 0.2s;
+  animation: flash 0.2s;
 }
+
 @keyframes flash{
-0%{background:red}
-100%{background:#0b1d26}
+  0%{background:red}
+  100%{background:#0b1d26}
 }
 </style>
 </head>
-
 <body>
 
-<h2 style="color:white">館長の神ゲー</h2>
+<h2>館長の神ゲー<br>赤を押したらいやん</h2>
 
 <div id="score">Score:0</div>
 <div id="combo">Combo:0</div>
@@ -47,107 +60,102 @@ animation:flash 0.2s;
 
 <div id="circle"></div>
 
-<button onclick="start()">スタート</button>
+<button onclick="startGame()">スタート</button>
+
+<audio id="bgm" src="music.mp3" loop></audio>
 
 <script>
+// --- URL ここを新URLに置き換え ---
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyxYEOHVtVb1axr6og0LcFPkINM2wC4t8d_aPpwnm0QQZ-Bt4UHxnIAyQMxarSdTqVM/exec";
 
-const URL="https://script.google.com/macros/s/AKfycbyxYEOHVtVb1axr6og0LcFPkINM2wC4t8d_aPpwnm0QQZ-Bt4UHxnIAyQMxarSdTqVM/exec"
+// --- ゲーム変数 ---
+let score = 0;
+let combo = 0;
+let time = 30;
+let playing = false;
+let currentColor = "";
 
-let score=0
-let combo=0
-let time=30
-let playing=false
-let current=""
+const circle = document.getElementById("circle");
+const scoreTxt = document.getElementById("score");
+const comboTxt = document.getElementById("combo");
+const timerTxt = document.getElementById("timer");
+const bgm = document.getElementById("bgm");
 
-let bgm=new Audio("music.mp3")
-bgm.loop=true
-
-let miss=new AudioContext()
-
+// --- 効果音 ---
 function beep(){
-let o=miss.createOscillator()
-let g=miss.createGain()
-o.connect(g);g.connect(miss.destination)
-o.frequency.value=100
-o.start()
-g.gain.exponentialRampToValueAtTime(0.0001,miss.currentTime+0.2)
+  const ctx = new AudioContext();
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+  o.frequency.value=150;
+  o.start();
+  g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.2);
 }
 
-function next(){
-
-const r=Math.random()
-
-if(r<0.33){current="blue";circle.style.background="blue"}
-else if(r<0.66){current="green";circle.style.background="green"}
-else{current="red";circle.style.background="red"}
+// --- 色を決定 ---
+function nextColor(){
+  const r = Math.random();
+  if(r<0.33){currentColor="blue"; circle.style.background="blue";}
+  else if(r<0.66){currentColor="green"; circle.style.background="green";}
+  else{currentColor="red"; circle.style.background="red";}
 }
 
-circle.onclick=()=>{
+// --- サークル押下 ---
+circle.onclick = ()=>{
+  if(!playing) return;
 
-if(!playing)return
+  if(currentColor==="blue"){
+    score += 2;
+    combo++;
+  }else if(currentColor==="green"){
+    score += 1;
+    combo++;
+  }else{ // 赤
+    combo = 0;
+    document.body.classList.add("flash");
+    navigator.vibrate(200);
+    beep();
+    setTimeout(()=>document.body.classList.remove("flash"),200);
+  }
 
-if(current==="blue"){
-score+=2
-combo++
-}
-else if(current==="green"){
-score+=1
-combo++
-}
-else{
-combo=0
-navigator.vibrate(200)
-beep()
-document.body.classList.add("flash")
-setTimeout(()=>document.body.classList.remove("flash"),200)
-}
-
-scoreTxt.innerText="Score:"+score
-comboTxt.innerText="Combo:"+combo
-
-next()
+  scoreTxt.innerText = "Score:"+score;
+  comboTxt.innerText = "Combo:"+combo;
+  nextColor();
 }
 
-function start(){
+// --- スタート ---
+function startGame(){
+  score=0; combo=0; time=30; playing=true;
+  scoreTxt.innerText="Score:0"; comboTxt.innerText="Combo:0"; timerTxt.innerText=time;
+  bgm.play();
+  nextColor();
 
-score=0
-combo=0
-time=30
-playing=true
+  const interval = setInterval(()=>{
+    time--;
+    timerTxt.innerText=time;
+    if(time<=0){
+      clearInterval(interval);
+      playing=false;
+      bgm.pause();
 
-bgm.play()
+      const name = prompt("名前を入力してください") || "名無し";
 
-timer.innerText=time
-scoreTxt.innerText="Score:0"
-comboTxt.innerText="Combo:0"
+      fetch(GAS_URL,{
+        method:"POST",
+        mode:"no-cors",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          Name:name,
+          Score:score,
+          Game:"判断ゲーム",
+          Date:new Date().toLocaleString()
+        })
+      });
 
-next()
-
-let t=setInterval(()=>{
-time--
-timer.innerText=time
-if(time<=0){
-clearInterval(t)
-playing=false
-bgm.pause()
-
-let name=prompt("名前")
-fetch(URL,{
-method:"POST",
-body:JSON.stringify({
-Name:name,
-Score:score,
-Game:"判断",
-Date:new Date().toLocaleString()
-})
-})
-
+      alert("終了！ Score:"+score);
+    }
+  },1000);
 }
-},1000)
-
-}
-
 </script>
-
 </body>
 </html>
