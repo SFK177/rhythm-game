@@ -1,215 +1,215 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>赤を押したらいやん</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>正拳中段突き判断チャレンジ</title>
 
 <style>
-
 body{
-  margin:0;
-  font-family:sans-serif;
-  text-align:center;
-  color:white;
-  height:100vh;
-  overflow:hidden;
-
-  background:linear-gradient(-45deg,#0f2027,#203a43,#2c5364,#1a2a6c);
-  background-size:400% 400%;
-  animation:bgMove 12s ease infinite;
+ text-align:center;
+ font-family:sans-serif;
+ background: radial-gradient(circle at center,#1a2a6c,#16222a);
+ color:white;
 }
 
-/* 背景アニメーション */
-@keyframes bgMove{
-  0%{background-position:0% 50%;}
-  50%{background-position:100% 50%;}
-  100%{background-position:0% 50%;}
-}
-
-/* 浮遊粒子 */
-body::after{
-  content:"";
-  position:fixed;
-  top:0;
-  left:0;
-  width:200%;
-  height:200%;
-  background-image:radial-gradient(white 1px, transparent 1px);
-  background-size:40px 40px;
-  opacity:0.15;
-  animation:stars 40s linear infinite;
-}
-
-@keyframes stars{
-  from{transform:translate(0,0);}
-  to{transform:translate(-200px,-200px);}
-}
-
-
-/* タイトル（固定サイズ）*/
-#title{
-  margin-top:15px;
-  font-size:38px;
-  font-weight:bold;
-  letter-spacing:2px;
-}
-
-/* 情報 */
-#info{
-  font-size:22px;
-  margin-top:10px;
+h2{
+ text-shadow:0 0 12px rgba(255,255,255,0.7);
 }
 
 /* メッセージ */
 #msg{
-  height:40px;
-  font-size:28px;
-  font-weight:bold;
+ height:40px;
+ font-size:30px;
+ font-weight:bold;
+ text-shadow:0 0 10px white;
 }
 
-/* ボタン */
+/* 的 */
+#target{
+ width:220px;
+ height:220px;
+ margin:30px auto;
+ border-radius:50%;
+ background:gray;
+
+ box-shadow:
+ 0 10px 25px rgba(0,0,0,0.7),
+ inset 0 4px 12px rgba(255,255,255,0.4);
+
+ transition: transform 0.1s, box-shadow 0.1s;
+}
+
+#target:active{
+ transform:scale(0.9);
+ box-shadow:0 3px 10px rgba(0,0,0,0.8);
+}
+
 button{
-  font-size:20px;
-  padding:10px 20px;
-  margin:10px;
+ font-size:18px;
+ padding:12px 24px;
+ margin:8px;
+ border:none;
+ border-radius:12px;
+ background:#2a2a2a;
+ color:white;
+ box-shadow:0 4px 10px rgba(0,0,0,0.6);
 }
 
-/* 押す丸（固定サイズ）*/
-#circle{
-  width:180px;
-  height:180px;
-  border-radius:50%;
-  margin:20px auto;
-  box-shadow:0 0 25px rgba(255,255,255,0.6);
-  transition:0.15s;
+button:active{
+ transform:scale(0.95);
 }
 
 .flash{
-  animation:flash 0.25s;
+ animation:flashRed 0.25s;
 }
 
-@keyframes flash{
-  from{background:white;}
-  to{background:inherit;}
+@keyframes flashRed{
+ 0%{background:#ff0000;}
+ 100%{background:#16222a;}
 }
-
 </style>
 </head>
 
 <body>
 
-<div id="title">赤を押したらいやん</div>
-
-<div id="info">
-スコア: <span id="score">0</span>
-コンボ: <span id="combo">0</span>
-残り: <span id="time">30</span>
-</div>
+<h2>正拳中段突き 判断チャレンジ</h2>
 
 <div id="msg"></div>
+<div id="target"></div>
 
-<div id="circle"></div>
+<div>スコア：<span id="score">0</span></div>
+<div>コンボ：<span id="combo">0</span></div>
+<div>残り：<span id="time">30</span>秒</div>
 
-<button onclick="start()">スタート</button>
-<button onclick="retry()">再挑戦</button>
+<button id="startBtn">スタート</button>
+<button id="sendBtn" disabled>ランキング送信</button>
+<button onclick="location.reload()">再挑戦</button>
 
+<!-- 音 -->
 <audio id="bgm" loop>
-<source src="https://actions.google.com/sounds/v1/ambiences/bird_forest.ogg">
+<source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
+</audio>
+
+<audio id="hit">
+<source src="https://www.soundjay.com/button/sounds/button-16.mp3">
 </audio>
 
 <script>
+let score=0
+let combo=0
+let time=30
+let playing=false
+let type=""
+let timer
+let colorTimer
 
-let score=0;
-let combo=0;
-let time=30;
-let running=false;
-let color="blue";
-let timer;
-let changer;
+const target=document.getElementById("target")
+const scoreEl=document.getElementById("score")
+const comboEl=document.getElementById("combo")
+const timeEl=document.getElementById("time")
+const sendBtn=document.getElementById("sendBtn")
+const msg=document.getElementById("msg")
 
-const circle=document.getElementById("circle");
-const msg=document.getElementById("msg");
-const bgm=document.getElementById("bgm");
-
-function randColor(){
-  const r=Math.random();
-  if(r<0.4) color="blue";
-  else if(r<0.8) color="green";
-  else color="red";
-  circle.style.background=color;
+function showMsg(text){
+ msg.textContent=text
+ setTimeout(()=>msg.textContent="",900)
 }
 
-circle.onclick=()=>{
-  if(!running) return;
+function getRank(s){
+ if(s<50) return "見習い"
+ if(s<150) return "初級"
+ if(s<300) return "中級"
+ if(s<500) return "上級"
+ if(s<800) return "黒帯候補"
+ return "師範級🔥"
+}
 
-  if(color==="blue"){
-    score++;
-    combo++;
-    msg.innerText="いいよ";
-  }
+function nextTarget(){
+ const r=Math.random()
+ if(r<0.4){type="blue";target.style.background="blue"}
+ else if(r<0.75){type="green";target.style.background="green"}
+ else{type="red";target.style.background="red"}
+}
 
-  if(color==="green"){
-    score+=3;
-    combo++;
-    msg.innerText="さいこー";
-  }
+target.onclick=()=>{
+ if(!playing)return
 
-  if(color==="red"){
-    score=0;
-    combo=0;
-    msg.innerText="いやーん";
+ document.getElementById("hit").currentTime=0
+ document.getElementById("hit").play()
 
-    circle.classList.add("flash");
-    setTimeout(()=>circle.classList.remove("flash"),200);
+ if(type==="blue"){
+   score+=10
+   combo++
+   showMsg("いいよ")
+ }
+ else if(type==="green"){
+   combo++
+   score+=combo*2
+   showMsg("さいこー")
+ }
+ else{
+   score=0
+   combo=0
+   showMsg("いやーん")
 
-    if(navigator.vibrate)
-      navigator.vibrate(200);
-  }
+   if(navigator.vibrate) navigator.vibrate(200)
+   document.body.classList.add("flash")
+   setTimeout(()=>document.body.classList.remove("flash"),200)
+ }
 
-  update();
-};
+ update()
+ nextTarget()
+}
 
 function update(){
-  document.getElementById("score").innerText=score;
-  document.getElementById("combo").innerText=combo;
+ scoreEl.textContent=score
+ comboEl.textContent=combo
 }
 
-function start(){
-  score=0;
-  combo=0;
-  time=30;
-  running=true;
+startBtn.onclick=()=>{
+ score=0
+ combo=0
+ time=30
+ playing=true
+ sendBtn.disabled=true
 
-  bgm.currentTime=0;
-  bgm.play();
+ document.getElementById("bgm").volume=0.2
+ document.getElementById("bgm").play()
 
-  update();
+ update()
+ nextTarget()
+ timeEl.textContent=time
 
-  timer=setInterval(()=>{
-    time--;
-    document.getElementById("time").innerText=time;
-    if(time<=0) end();
-  },1000);
+ colorTimer=setInterval(()=>{
+   if(playing) nextTarget()
+ },800)
 
-  changer=setInterval(randColor,700);
+ timer=setInterval(()=>{
+   time--
+   timeEl.textContent=time
+
+   if(time<=0){
+     clearInterval(timer)
+     clearInterval(colorTimer)
+     playing=false
+     document.getElementById("bgm").pause()
+
+     alert("終了！\nスコア："+score+"\nランク："+getRank(score))
+     sendBtn.disabled=false
+   }
+ },1000)
 }
 
-function retry(){
-  clearInterval(timer);
-  clearInterval(changer);
-  start();
+sendBtn.onclick=()=>{
+ const name=prompt("名前を入力")
+ if(!name)return
+
+ fetch("https://script.google.com/macros/s/AKfycbw3iOC_7EBRqfXUZjnblOXdTI8gcLcpA8RqEf_lurK9YQhcO5AduBAMJBLo71qfbHET/exec",{
+   method:"POST",
+   body:JSON.stringify({name:name,score:score})
+ })
+ alert("送信しました！")
 }
-
-function end(){
-  running=false;
-  clearInterval(timer);
-  clearInterval(changer);
-  bgm.pause();
-  msg.innerText="終了！";
-}
-
-randColor();
-
 </script>
 
 </body>
