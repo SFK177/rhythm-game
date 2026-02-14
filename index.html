@@ -1,101 +1,153 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>館長の神ゲー</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 body{
-  margin:0;
-  font-family:sans-serif;
-  background:linear-gradient(#0f2027,#203a43);
-  color:white;
-  text-align:center;
+margin:0;
+font-family:sans-serif;
+background:#0b1d26;
+text-align:center;
+overflow:hidden;
 }
 
 #circle{
-  width:160px;
-  height:160px;
-  border-radius:50%;
-  margin:40px auto;
-  background:red;
-  box-shadow:0 0 40px rgba(0,0,0,0.5);
+width:180px;
+height:180px;
+border-radius:50%;
+margin:50px auto;
 }
 
+#score{color:white;font-size:22px}
+#combo{color:yellow}
+#timer{color:white}
+
 button{
-  font-size:20px;
-  padding:10px 20px;
+padding:12px 24px;
+font-size:18px;
+}
+
+.flash{
+animation:flash 0.2s;
+}
+@keyframes flash{
+0%{background:red}
+100%{background:#0b1d26}
 }
 </style>
 </head>
 
 <body>
 
-<h2>館長の神ゲー<br>赤を押したらいやん</h2>
+<h2 style="color:white">館長の神ゲー</h2>
 
 <div id="score">Score:0</div>
+<div id="combo">Combo:0</div>
+<div id="timer">30</div>
+
 <div id="circle"></div>
 
-<button onclick="startGame()">スタート</button>
+<button onclick="start()">スタート</button>
 
 <script>
 
-const GAS_URL="https://script.google.com/macros/s/AKfycbxvmVtjmGDgewahlPtg-VnxIpee24NAEffgnpyLcMZPwEY4xbefdV24PdbWUTqVoA6K/exec";
+const URL="https://script.google.com/macros/s/AKfycbyxYEOHVtVb1axr6og0LcFPkINM2wC4t8d_aPpwnm0QQZ-Bt4UHxnIAyQMxarSdTqVM/exec"
 
-let score=0;
-let playing=false;
+let score=0
+let combo=0
+let time=30
+let playing=false
+let current=""
 
-function startGame(){
- score=0;
- playing=true;
- document.getElementById("score").innerText="Score:0";
- next();
- setTimeout(endGame,15000);
+let bgm=new Audio("music.mp3")
+bgm.loop=true
+
+let miss=new AudioContext()
+
+function beep(){
+let o=miss.createOscillator()
+let g=miss.createGain()
+o.connect(g);g.connect(miss.destination)
+o.frequency.value=100
+o.start()
+g.gain.exponentialRampToValueAtTime(0.0001,miss.currentTime+0.2)
 }
 
 function next(){
- if(!playing) return;
 
- let colors=["red","blue","green","yellow"];
- let c=colors[Math.floor(Math.random()*colors.length)];
+const r=Math.random()
 
- let circle=document.getElementById("circle");
- circle.style.background=c;
-
- circle.onclick=()=>{
-   if(!playing) return;
-
-   if(c==="red"){
-     score--;
-   }else{
-     score++;
-   }
-   document.getElementById("score").innerText="Score:"+score;
-   next();
- }
+if(r<0.33){current="blue";circle.style.background="blue"}
+else if(r<0.66){current="green";circle.style.background="green"}
+else{current="red";circle.style.background="red"}
 }
 
-function endGame(){
- playing=false;
+circle.onclick=()=>{
 
- let name=prompt("名前入れて下さい");
- if(!name) name="名無し";
+if(!playing)return
 
- fetch(GAS_URL,{
-   method:"POST",
-   mode:"no-cors",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({
-     Name:name,
-     Score:score,
-     Game:"判断ゲーム",
-     Date:new Date().toLocaleString()
-   })
- });
-
- alert("終了！ Score:"+score);
+if(current==="blue"){
+score+=2
+combo++
 }
+else if(current==="green"){
+score+=1
+combo++
+}
+else{
+combo=0
+navigator.vibrate(200)
+beep()
+document.body.classList.add("flash")
+setTimeout(()=>document.body.classList.remove("flash"),200)
+}
+
+scoreTxt.innerText="Score:"+score
+comboTxt.innerText="Combo:"+combo
+
+next()
+}
+
+function start(){
+
+score=0
+combo=0
+time=30
+playing=true
+
+bgm.play()
+
+timer.innerText=time
+scoreTxt.innerText="Score:0"
+comboTxt.innerText="Combo:0"
+
+next()
+
+let t=setInterval(()=>{
+time--
+timer.innerText=time
+if(time<=0){
+clearInterval(t)
+playing=false
+bgm.pause()
+
+let name=prompt("名前")
+fetch(URL,{
+method:"POST",
+body:JSON.stringify({
+Name:name,
+Score:score,
+Game:"判断",
+Date:new Date().toLocaleString()
+})
+})
+
+}
+},1000)
+
+}
+
 </script>
+
 </body>
 </html>
