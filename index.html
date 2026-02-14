@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>赤はおさないで</title>
+<title>赤を押したらいやん</title>
 
 <style>
 
@@ -46,21 +46,18 @@ body::after{
 }
 
 
-/* タイトル */
-h1{
+/* タイトル（固定サイズ）*/
+#title{
   margin-top:15px;
-  font-size:36px;
-  line-height:1.2;
-}
-
-#sub{
-  font-size:26px;
-  margin-bottom:10px;
+  font-size:38px;
+  font-weight:bold;
+  letter-spacing:2px;
 }
 
 /* 情報 */
 #info{
   font-size:22px;
+  margin-top:10px;
 }
 
 /* メッセージ */
@@ -77,10 +74,10 @@ button{
   margin:10px;
 }
 
-/* 押す丸 */
+/* 押す丸（固定サイズ）*/
 #circle{
-  width:170px;
-  height:170px;
+  width:180px;
+  height:180px;
   border-radius:50%;
   margin:20px auto;
   box-shadow:0 0 25px rgba(255,255,255,0.6);
@@ -101,8 +98,7 @@ button{
 
 <body>
 
-<h1>館長の神ゲー</h1>
-<div id="sub">赤はおさないで</div>
+<div id="title">赤を押したらいやん</div>
 
 <div id="info">
 スコア: <span id="score">0</span>
